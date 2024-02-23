@@ -2,6 +2,7 @@
 #include "Vec4f.cpp"
 #include <math.h>
 #include "../buffers/FloatBuffer.cpp"
+#include "Quaternion.cpp"
 
 class Matrix4f {
 
@@ -15,6 +16,26 @@ public:
 	Matrix4f() {
 		this->identity();
 	}
+
+	void copy(const Matrix4f& other) {
+		this->m11 = other.m11;
+		this->m12 = other.m12;
+		this->m13 = other.m13;
+		this->m14 = other.m14;
+		this->m21 = other.m21;
+		this->m22 = other.m22;
+		this->m23 = other.m23;
+		this->m24 = other.m24;
+		this->m31 = other.m31;
+		this->m32 = other.m32;
+		this->m33 = other.m33;
+		this->m34 = other.m34;
+		this->m41 = other.m41;
+		this->m42 = other.m42;
+		this->m43 = other.m43;
+		this->m44 = other.m44;
+	}
+	
 
 	void identity() {
 		m11 = 1; m22 = 1; m33 = 1; m44 = 1;
@@ -57,15 +78,44 @@ public:
 		this->multiply(mat);
 	}
 
+	void rotate(Quaternion& q) {
+		Matrix4f m = Matrix4f();
+		float s = q.lenSqr();
+		if (s != 0) {
+			s = 2 / s;
+		}
+		float xx = q.x * q.x;
+		float yy = q.y * q.y;
+		float zz = q.z * q.z;
+		float ww = q.w * q.w;
+		float xz = q.x * q.z;
+		float wz = q.w * q.z;
+		float yz = q.y * q.z;
+		float xw = q.x * q.w;
+		float yw = q.y * q.w;
+		float xy = q.x * q.y;
+
+		m.m11 = 1 - s * (yy + zz);
+		m.m12 = s * (xy - wz);
+		m.m13 = s * (xz + yw);
+		m.m21 = s * (xy + wz);
+		m.m22 = 1 - s * (xx + zz);
+		m.m23 = s * (yz - xw);
+		m.m31 = s * (xz - yw);
+		m.m32 = s * (yz + xw);
+		m.m33 = 1 - s * (xx + yy);
+		this->multiply(m);
+	}
+
 	void rotateYDegrees(float angle) {
 		Matrix4f mat = Matrix4f();
 		angle = (angle / 360) * 3.1415 * 2;
 		float co = cos(angle);
 		float si = sin(angle);
 		mat.m11 = co;
-		mat.m13 = -si;
-		mat.m31 = co;
-		mat.m33 = si;
+		mat.m13 = si;
+		mat.m31 = -si;
+		mat.m33 = co;
 		this->multiply(mat);
 	}
 
@@ -75,8 +125,8 @@ public:
 		float co = cos(angle);
 		float si = sin(angle);
 		mat.m22 = co;
-		mat.m32 = -si;
-		mat.m23 = si;
+		mat.m23 = -si;
+		mat.m32 = si;
 		mat.m33 = co;
 		this->multiply(mat);
 	}
@@ -102,6 +152,16 @@ public:
 		vec.y = y;
 		vec.z = z;
 		vec.w = w;
+	}
+	void transform(Vec3f& v) {
+		Vec4f vec = Vec4f(v.x,v.y, v.z, 1);
+		float x = m11 * vec.x + m12 * vec.y + m13 * vec.z + m14 * vec.w;
+		float y = m21 * vec.x + m22 * vec.y + m23 * vec.z + m24 * vec.w;
+		float z = m31 * vec.x + m32 * vec.y + m33 * vec.z + m34 * vec.w;
+		float w = m41 * vec.x + m42 * vec.y + m43 * vec.z + m44 * vec.w;
+		v.x = x;
+		v.y = y;
+		v.z = z;
 	}
 
 	void loadToBuffer(FloatBuffer& buffer) {
@@ -156,17 +216,20 @@ public:
 		left.normalize();
 		Matrix4f mat = Matrix4f();
 
+		Vec3f rup = between.cross(left);
+
+
 		mat.m11 = left.x;
 		mat.m12 = left.y;
 		mat.m13 = left.z;
-		mat.m21 = up.x;
-		mat.m22 = up.y;
-		mat.m23 = up.z;
+		mat.m21 = rup.x;
+		mat.m22 = rup.y;
+		mat.m23 = rup.z;
 		mat.m31 = between.x;
 		mat.m32 = between.y;
 		mat.m33 = between.z;
 		mat.m14 = -left.x * eye.x - left.y * eye.y - left.z * eye.z;
-		mat.m24 = -up.x * eye.x - up.y * eye.y - up.z * eye.z;
+		mat.m24 = -rup.x * eye.x - rup.y * eye.y - rup.z * eye.z;
 		mat.m34 = -between.x * eye.x - between.y * eye.y - between.z * eye.z;
 		mat.m44 = 1;
 		mat.m42 = 0;

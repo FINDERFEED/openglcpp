@@ -61,4 +61,28 @@ public:
 		return nv;
 	}
 
+	Vec3f operator*(float mul) {
+		Vec3f nv = Vec3f(
+			x * mul,
+			y * mul,
+			z * mul
+		);
+		return nv;
+	}
+
+	Vec3f operator*(Vec3f& other) {
+		Vec3f nv = Vec3f(
+			x * other.x,
+			y * other.y,
+			z * other.z
+		);
+		return nv;
+	}
+
+	void reverse() {
+		x = -x;
+		y = -y;
+		z = -z;
+	}
+
 };

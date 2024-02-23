@@ -27,6 +27,7 @@ private:
 
 	int vertexCount = 0;
 	int currentElementId = 0;
+	int wasRenderedOnce = 0;
 
 public:
 
@@ -92,16 +93,16 @@ public:
 		return format->getElement(currentElementId);
 	}
 
-	void draw() {
+	void draw(int keepData) {
 		switch (drawMode) {
 		case GL_TRIANGLES: {
-			this->drawTriangles();
+			this->drawTriangles(keepData);
 			break;
 		}
 		}
 	}
 
-	void drawTriangles() {
+	void drawTriangles(int keepData) {
 		if (vertexCount % 4 != 0) {
 			std::cout << "Incomplete buffer!";
 			exit(1);
@@ -110,22 +111,29 @@ public:
 		glBindVertexArray(vao);
 	
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		unsigned int datasize = vertexSize * vertexCount;
-		glBufferData(GL_ARRAY_BUFFER, datasize,vertexData->getData(), GL_DYNAMIC_DRAW);
+		if (!keepData || keepData && !wasRenderedOnce) {
+			unsigned int datasize = vertexSize * vertexCount;
+			glBufferData(GL_ARRAY_BUFFER, datasize, vertexData->getData(), GL_DYNAMIC_DRAW);
+		}
+		
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
 		int polygonCount = vertexCount / 4;
-		unsigned int* indices = new unsigned int[polygonCount * 6];
-		int k = 0;
-		for (int p = 0; p < polygonCount; p++) {
-			for (int i = 0; i < 6; i++) {
-				int index = triangleDrawOrder[i] + p * 4;
-				indices[k++] = index;
+		if (!keepData || keepData && !wasRenderedOnce) {
+			
+			unsigned int* indices = new unsigned int[polygonCount * 6];
+			int k = 0;
+			for (int p = 0; p < polygonCount; p++) {
+				for (int i = 0; i < 6; i++) {
+					int index = triangleDrawOrder[i] + p * 4;
+					indices[k++] = index;
+				}
 			}
+			int indicesSize = polygonCount * 6 * sizeof(unsigned int);
+
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, indices, GL_DYNAMIC_DRAW);
+			delete[] indices;
 		}
-		int indicesSize = polygonCount * 6 * sizeof(unsigned int);
-	
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER,indicesSize,indices,GL_DYNAMIC_DRAW);
 		int pointer = 0;
 		for (int i = 0; i < format->getSize(); i++) {
 			Element& element = format->getElement(i);
@@ -140,14 +148,17 @@ public:
 		glDrawElements(GL_TRIANGLES, polygonCount * 6, GL_UNSIGNED_INT, nullptr);
 
 		
-		delete[] indices;
-		this->cleanup();
+		
+		this->cleanup(keepData);
 	}
 
-	void cleanup() {
-		vertexData->resetPosition();
-		currentElementId = 0;
-		vertexCount = 0;
+	void cleanup(int keepData) {
+		if (!keepData || keepData && !wasRenderedOnce) {
+			vertexData->resetPosition();
+			currentElementId = 0;
+			vertexCount = 0;
+			wasRenderedOnce = keepData;
+		}
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
