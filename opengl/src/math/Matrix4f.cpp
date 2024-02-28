@@ -143,6 +143,15 @@ public:
 		this->multiply(mat);
 	}
 
+	void scale(float x, float y, float z) {
+		Matrix4f m = Matrix4f();
+		m.m11 = x;
+		m.m22 = y;
+		m.m33 = z;
+		m.m44 = 1;
+		this->multiply(m);
+	}
+
 	void transform(Vec4f& vec) {
 		float x = m11 * vec.x + m12 * vec.y + m13 * vec.z + m14 * vec.w;
 		float y = m21 * vec.x + m22 * vec.y + m23 * vec.z + m24 * vec.w;

@@ -14,7 +14,9 @@ public:
         double angleX = Util::toDegrees(atan2(sqrt(vec.x * vec.x + vec.z * vec.z), vec.y));
         matrix.rotateZDegrees(angleY);
         matrix.rotateXDegrees(angleX);
-        //matrices.mulPose(rotationDegrees(YP(), (float)angleY));
-        //matrices.mulPose(rotationDegrees(XP(), (float)angleX));
     }
+
+     static float lerp(float v1,float v2,float p) {
+         return v1 + (v2 - v1) * p;
+     }
 };

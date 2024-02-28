@@ -76,6 +76,14 @@ public:
 		this->multiply(mat);
 	}
 
+	void scale(float x, float y, float z) {
+		Matrix3f m = Matrix3f();
+		m.m11 = x;
+		m.m22 = y;
+		m.m33 = z;
+		this->multiply(m);
+	}
+
 	void identity() {
 		m11 = 1;
 		m22 = 1;

@@ -3,6 +3,7 @@
 #include <glew.h>
 #include "math/Matrix4f.cpp"
 #include "batching/VertexFormat.cpp";
+#include "system/Texture.cpp";
 
 class Shader {
 
@@ -11,8 +12,10 @@ public:
 	GLuint shaderProgram;
 	GLuint vertexShader;
 	GLuint fragmentShader;
+	std::string name;
 
 	Shader(std::string name,VertexFormat& format) {
+		this->name = name;
 		std::string vname = "resources/shaders/" + name + ".v";
 		std::string fname = "resources/shaders/" + name + ".f";
 
@@ -53,12 +56,29 @@ public:
 	void mat4uniform(const char* name,Matrix4f& mat) {
 		FloatBuffer* buffer = new FloatBuffer(16);
 		mat.loadToBuffer(*buffer);
-		GLuint pos = glGetUniformLocation(shaderProgram, name);
+		int pos = glGetUniformLocation(shaderProgram, name);
 		if (pos == -1) {
-			throw "Uniform doesn't exist";
+			std::cout << "Uniform " << name << " doesn't exist in " << this->name << std::endl;
+			exit(1);
 		}
 		glUniformMatrix4fv(pos,1,GL_FALSE,buffer->data);
 		delete buffer;
+	}
+
+	void textureUniform(const char* name,GLuint texId) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texId);
+
+		int pos = glGetUniformLocation(shaderProgram, name);
+		if (pos == -1) {
+			std::cout << "Uniform " << name << " doesn't exist in " << this->name << std::endl;
+			exit(1);
+		}
+		glUniform1i(pos, 0);
+	}
+
+	void textureUniform(const char* name, Texture& tex) {
+		this->textureUniform(name, tex.getTexId());
 	}
 
 	void process() {

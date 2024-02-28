@@ -64,6 +64,15 @@ public:
 		return this;
 	}
 
+	VertexBuffer* uv(float u,float v) {
+		this->checkCurrentElement(Elements::UV);
+		vertexData->putFloat(u);
+		vertexData->putFloat(v);
+		currentElementId++;
+		this->checkCurrentElementId();
+		return this;
+	}
+
 	VertexBuffer* endVertex() {
 		if (currentElementId != format->getSize()) {
 			std::cout << "Vertex incomplete!" << std::endl;
@@ -94,6 +103,9 @@ public:
 	}
 
 	void draw(int keepData) {
+		if (vertexCount == 0) {
+			return;
+		}
 		switch (drawMode) {
 		case GL_QUADS: {
 			this->drawQuads(keepData);
