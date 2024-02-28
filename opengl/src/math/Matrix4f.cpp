@@ -46,9 +46,9 @@ public:
 
 	void multiply(Matrix4f& other) {
 		float cm11 = m11 * other.m11 + m12 * other.m21 + m13 * other.m31 + m14 * other.m41;
-		float cm21 = m21 * other.m12 + m22 * other.m21 + m23 * other.m31 + m24 * other.m41;
-		float cm31 = m31 * other.m12 + m32 * other.m21 + m33 * other.m31 + m34 * other.m41;
-		float cm41 = m41 * other.m12 + m42 * other.m21 + m43 * other.m31 + m44 * other.m41;
+		float cm21 = m21 * other.m11 + m22 * other.m21 + m23 * other.m31 + m24 * other.m41;
+		float cm31 = m31 * other.m11 + m32 * other.m21 + m33 * other.m31 + m34 * other.m41;
+		float cm41 = m41 * other.m11 + m42 * other.m21 + m43 * other.m31 + m44 * other.m41;
 
 		float cm12 = m11 * other.m12 + m12 * other.m22 + m13 * other.m32 + m14 * other.m42;
 		float cm22 = m21 * other.m12 + m22 * other.m22 + m23 * other.m32 + m24 * other.m42;

@@ -13,6 +13,7 @@
 #include "Shaders.cpp"
 #include "batching/VertexBuffer.cpp"
 #include "system/Camera.cpp"
+#include "RenderUtil.cpp"
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;
@@ -159,7 +160,7 @@ int main(void) {
     int frame = 0;
     float s = 40;
 
-    VertexBuffer* b = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_TRIANGLES);
+    VertexBuffer* b = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_QUADS);
 
     VertexBuffer* lineb = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_LINES);
     Matrix4f lineMat = Matrix4f();
@@ -169,10 +170,14 @@ int main(void) {
     //mat.rotate(q);
     
     //mat.rotate(q);
+    Vec3f v = Vec3f(1,1,1);
+    v.normalize();
+    RenderUtil::applyMovementMatrixRotations(mat, v);
     glLineWidth(4);
-    b->position(mat, 0, 0, 0)->color(1, 0, 0, 1)->endVertex();
-    b->position(mat, 1, 0, 1)->color(0, 1, 0, 1)->endVertex();
-    b->position(mat, 1, 1, 1)->color(0, 0, 1, 1)->endVertex();
+    b->position(mat, 0, 0, 0)->color(1, 1, 1, 1)->endVertex();
+    b->position(mat, 1, 0, 0)->color(1, 0, 0, 1)->endVertex();
+    b->position(mat, 1, 1, 0)->color(0, 1, 0, 1)->endVertex();
+    b->position(mat, 0, 1, 0)->color(0, 0, 1, 1)->endVertex();
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
 

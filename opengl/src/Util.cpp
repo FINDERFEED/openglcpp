@@ -40,6 +40,10 @@ public:
 		return angle / 360 * PI * 2;
 	}
 
+	static float toDegrees(float angle) {
+		return angle / PI / 2 * 360;
+	}
+
 	static float toEuler(float degrees) {
 		degrees = fmod(degrees, 360);
 		if (degrees < -180) {
