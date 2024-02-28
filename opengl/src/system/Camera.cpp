@@ -32,9 +32,6 @@ public:
 		Quaternion q2 = Quaternion(1,0,0,pitch);
 		q.multiply(q2);
 		mat.rotate(q);
-
-		//mat.rotateYDegrees(yaw);
-		//mat.rotateXDegrees(pitch);
 		mat.transform(look);
 		look.normalize();
 		return look;

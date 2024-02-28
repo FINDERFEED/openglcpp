@@ -95,6 +95,14 @@ public:
 
 	void draw(int keepData) {
 		switch (drawMode) {
+		case GL_QUADS: {
+			this->drawQuads(keepData);
+			break;
+		}
+		case GL_LINES: {
+			this->drawLines(keepData);
+			break;
+		}
 		case GL_TRIANGLES: {
 			this->drawTriangles(keepData);
 			break;
@@ -103,6 +111,68 @@ public:
 	}
 
 	void drawTriangles(int keepData) {
+		if (vertexCount % 3 != 0) {
+			std::cout << "Incomplete buffer!" << std::endl;
+			exit(1);
+		}
+
+		int vertexSize = format->getByteSize();
+		glBindVertexArray(vao);
+
+		loadToVBO(keepData);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		if (!keepData || keepData && !wasRenderedOnce) {
+
+			unsigned int* indices = new unsigned int[vertexCount];
+			for (int i = 0; i < vertexCount; i++) {
+				indices[i] = i;
+			}
+
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(unsigned int), indices,keepData ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+			delete[] indices;
+		}
+		initiateVAO();
+
+		glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, nullptr);
+
+
+		this->cleanup(keepData);
+	}
+
+	void drawLines(int keepData) {
+		if (vertexCount % 2 != 0) {
+			std::cout << "Incomplete buffer!" << std::endl;
+			exit(1);
+		}
+		int vertexSize = format->getByteSize();
+		glBindVertexArray(vao);
+
+		loadToVBO(keepData);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		if (!keepData || keepData && !wasRenderedOnce) {
+
+			unsigned int* indices = new unsigned int[vertexCount];
+			for (int i = 0; i < vertexCount; i++) {
+				indices[i] = i;
+			}
+
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(unsigned int), indices, keepData ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+			delete[] indices;
+		}
+		initiateVAO();
+
+		glDrawElements(GL_LINES, vertexCount, GL_UNSIGNED_INT, nullptr);
+
+
+		this->cleanup(keepData);
+	}
+
+
+
+
+	void drawQuads(int keepData) {
 		if (vertexCount % 4 != 0) {
 			std::cout << "Incomplete buffer!";
 			exit(1);
@@ -110,12 +180,9 @@ public:
 		int vertexSize = format->getByteSize();
 		glBindVertexArray(vao);
 	
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		if (!keepData || keepData && !wasRenderedOnce) {
-			unsigned int datasize = vertexSize * vertexCount;
-			glBufferData(GL_ARRAY_BUFFER, datasize, vertexData->getData(), GL_DYNAMIC_DRAW);
-		}
-		
+
+
+		loadToVBO(keepData);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
 		int polygonCount = vertexCount / 4;
@@ -131,32 +198,45 @@ public:
 			}
 			int indicesSize = polygonCount * 6 * sizeof(unsigned int);
 
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, indices, GL_DYNAMIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, indices, keepData ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 			delete[] indices;
 		}
+		initiateVAO();
+		
+		glDrawElements(GL_TRIANGLES, polygonCount * 6, GL_UNSIGNED_INT, nullptr);
+
+		this->cleanup(keepData);
+	}
+
+	void loadToVBO(int keepData) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		if (!keepData || keepData && !wasRenderedOnce) {
+			unsigned int datasize = format->getByteSize() * vertexCount;
+			glBufferData(GL_ARRAY_BUFFER, datasize, vertexData->getData(),keepData ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+		}
+	}
+
+	void initiateVAO() {
 		int pointer = 0;
 		for (int i = 0; i < format->getSize(); i++) {
 			Element& element = format->getElement(i);
 			glEnableVertexAttribArray(i);
 			int elementCount = element.getElementCount();
-			glVertexAttribPointer(i, elementCount, 
+			glVertexAttribPointer(i, elementCount,
 				element.getElementType(), GL_FALSE,
-				vertexSize, (void*)pointer);
+				format->getByteSize(), (void*)pointer);
 			pointer += element.getFullByteSize();
 		}
-		
-		glDrawElements(GL_TRIANGLES, polygonCount * 6, GL_UNSIGNED_INT, nullptr);
-
-		
-		
-		this->cleanup(keepData);
 	}
+
 
 	void cleanup(int keepData) {
 		if (!keepData || keepData && !wasRenderedOnce) {
 			vertexData->resetPosition();
 			currentElementId = 0;
-			vertexCount = 0;
+			if (!keepData){
+				vertexCount = 0;
+			}
 			wasRenderedOnce = keepData;
 		}
 		glBindVertexArray(0);

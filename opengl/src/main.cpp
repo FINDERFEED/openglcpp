@@ -42,14 +42,17 @@ static Vec3f* e = new Vec3f(0,0,0);
 
 int d = 0;
 void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    Vec3f move = camera.getLookAngle() * 4;
+    Vec3f move = camera.getLookAngle() * 0.5;
     Vec3f up = Vec3f(0, 1, 0);
+    Vec3f left = move.cross(up);
+    Vec3f forward = left.cross(up);
+
     if (key == GLFW_KEY_W) {
-        
-        camera.move(move);
+        forward.reverse();
+        camera.move(forward);
     } else if (key == GLFW_KEY_S) {
-        move.reverse();
-        camera.move(move);
+        
+        camera.move(forward);
     } else if (key == GLFW_KEY_D) {
         Vec3f m = move.cross(up);
         camera.move(m);
@@ -64,6 +67,10 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
             glfwSetInputMode(WINDOW, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         d = !d;
+    } else if (key == GLFW_KEY_SPACE) {
+        camera.y++;
+    } else if (key == GLFW_KEY_LEFT_SHIFT) {
+        camera.y--;
     }
 }
 
@@ -79,6 +86,25 @@ void setCursorPos(GLFWwindow* window, double xpos, double ypos) {
         camera.yaw += -(posX - prevPosX) * 0.1;
         camera.setPitch(camera.getPitch() + -(posY - prevPosY) * 0.1);
     }
+}
+
+/*
+Vertex Buffer should be in lines mode!
+*/
+void drawOrthos(Matrix4f& mat, VertexBuffer* b) {
+    glLineWidth(4);
+    b->position(mat, 0, 0, 0)->color(1, 0, 0, 1)->endVertex();
+    b->position(mat, 100, 0, 0)->color(1, 0, 0, 1)->endVertex();
+
+    b->position(mat, 0, 0, 0)->color(0, 1, 0, 1)->endVertex();
+    b->position(mat, 0, 100, 0)->color(0, 1, 0, 1)->endVertex();
+
+    b->position(mat, 0, 0, 0)->color(0, 0, 1, 1)->endVertex();
+    b->position(mat, 0, 0, 100)->color(0, 0, 1, 1)->endVertex();
+    SHADERS.POSITION_COLOR->process();
+    b->draw(0);
+    SHADERS.POSITION_COLOR->stop();
+
 }
 
 
@@ -134,35 +160,35 @@ int main(void) {
     float s = 40;
 
     VertexBuffer* b = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_TRIANGLES);
+
+    VertexBuffer* lineb = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_LINES);
+    Matrix4f lineMat = Matrix4f();
     Matrix4f mat = Matrix4f();
-    Quaternion q = Quaternion(0, 0, 1, 45);
-    q.multiply(q);
-    mat.rotate(q);
-    
+    //Quaternion q = Quaternion(0, 0, 1, 45);
+    //q.multiply(q);
     //mat.rotate(q);
     
+    //mat.rotate(q);
+    glLineWidth(4);
+    b->position(mat, 0, 0, 0)->color(1, 0, 0, 1)->endVertex();
+    b->position(mat, 1, 0, 1)->color(0, 1, 0, 1)->endVertex();
+    b->position(mat, 1, 1, 1)->color(0, 0, 1, 1)->endVertex();
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         MODELVIEW = camera.matrix();
-        
 
-        float z = -40;
-        Vec4f v1 = Vec4f(-s, -s, z, 1); 
-        Vec4f v2 = Vec4f(s, -s, z, 1); 
-        Vec4f v3 = Vec4f(s, s, z, 1); 
-        Vec4f v4 = Vec4f(-s, s, z, 1); 
-        b->position(mat, v1.x, v1.y, v1.z)->color(0, 0, 0, 1)->endVertex();
-        b->position(mat, v2.x, v2.y, v2.z)->color(1, 0, 0, 1)->endVertex();
-        b->position(mat, v3.x, v3.y, v3.z)->color(0, 1, 0, 1)->endVertex();
-        b->position(mat, v4.x, v4.y, v4.z)->color(0, 0, 1, 1)->endVertex();
+        drawOrthos(lineMat,lineb);
+
+       
+
         shader->process();
         shader->mat4uniform("projection",PROJECTION);
-        shader->mat4uniform("modelview", MODELVIEW);
-        b->draw(0);
+        shader->mat4uniform("modelview",MODELVIEW);
+        b->draw(1);
+
         shader->stop();
 
-        
         glfwSwapBuffers(window);
         prevPosX = posX;
         prevPosY = posY;
@@ -173,4 +199,5 @@ int main(void) {
     glfwTerminate();
     return 0;
 }
+
 
