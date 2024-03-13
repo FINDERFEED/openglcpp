@@ -25,6 +25,7 @@ static Matrix4f PROJECTION = Matrix4f::perspective(90, WINDOW_WIDTH / (float)WIN
 static Matrix4f MODELVIEW;
 static Camera camera;
 static GLFWwindow* WINDOW;
+static int useWelt = 0;
 
 static void updateProjectionMatrix(int nw, int nh) {
     PROJECTION = Matrix4f::perspective(90, nw / (float)nh, Z_NEAR, Z_FAR);
@@ -49,18 +50,21 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
     Vec3f up = Vec3f(0, 1, 0);
     Vec3f left = move.cross(up);
     Vec3f forward = left.cross(up);
-
+    forward.normalize();
     if (key == GLFW_KEY_W) {
         forward.reverse();
+        
         camera.move(forward);
     } else if (key == GLFW_KEY_S) {
         
         camera.move(forward);
     } else if (key == GLFW_KEY_D) {
         Vec3f m = move.cross(up);
+        m.normalize();
         camera.move(m);
     } else if (key == GLFW_KEY_A) {
         Vec3f m = move.cross(up);
+        m.normalize();
         m.reverse();
         camera.move(m);
     } else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -74,6 +78,9 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
         camera.y++;
     } else if (key == GLFW_KEY_LEFT_SHIFT) {
         camera.y--;
+    }
+    else if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+        useWelt = !useWelt;
     }
 }
 
@@ -149,6 +156,7 @@ int main(void) {
     Shader* shader = SHADERS.POSITION_COLOR;
     Shader* texshader = SHADERS.POSITION_COLOR_TEX;
     Shader* pctn = SHADERS.POSITION_COLOR_TEX_NORMAL;
+    Shader* circleShader = SHADERS.POSITION_COLOR_TEX_CIRCLE;
 
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -174,23 +182,26 @@ int main(void) {
 
     Texture texture = Texture("bait");
     Texture bricks = Texture("bricks");
+    Texture welt = Texture("welt");
 
     Matrix4f lineMat = Matrix4f();
     Matrix4f mat = Matrix4f();
     
     Matrix4f mat2 = Matrix4f();
-
     mat2.rotateZDegrees(15);
+
     float h = 10;
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      /*  if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+            mat.rotateZDegrees(1);
+            mat2.rotateZDegrees(1);
+        }*/
+        
         MODELVIEW = camera.matrix();
         glDisable(GL_DEPTH_TEST);
-        texshader->process();
-        texshader->mat4uniform("projection", PROJECTION);
-        texshader->mat4uniform("modelview", MODELVIEW);
-        texshader->textureUniform("sampler0", texture.getTexId());
+       
         Matrix4f cm = Matrix4f();
         cm.translate(camera.x,camera.y,camera.z);
 
@@ -224,6 +235,10 @@ int main(void) {
         test->position(cm, 100, 100, 100)->color(1, 1, 1, 1)->uv(10, 10)->endVertex();
         test->position(cm, 100, 100, -100)->color(1, 1, 1, 1)->uv(0, 10)->endVertex();
 
+        texshader->process();
+        texshader->mat4uniform("projection", PROJECTION);
+        texshader->mat4uniform("modelview", MODELVIEW);
+        texshader->textureUniform("sampler0", texture.getTexId());
         test->draw(0);
         texshader->stop();
         
@@ -234,29 +249,40 @@ int main(void) {
         drawOrthos(lineMat,lineb);
 
 
-
-
-        //shader->process();
-        //shader->mat4uniform("projection", PROJECTION);
-        //shader->mat4uniform("modelview", MODELVIEW);
-
+        
+        Vec3f n1 = Util::computeNormal(
+            -6, 4, 0,
+            0, 2, 0,
+            0, 2, -h
+        );
+        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat,n1)->endVertex();
+        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat2, n1)->endVertex();
+        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat2, n1)->endVertex();
         
 
-        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat,0,1,0)->endVertex();
-        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
+
+        n1 = Util::computeNormal(
+            -6, 4, 0,
+            -1, 0, 0,
+            -1, 0, -h
+        );
+        n1.reverse();
+        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, n1)->endVertex();
+        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat2, n1)->endVertex();
+        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat2, n1)->endVertex();
         
-        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
-        
-        
-        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat, -2, -5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, -2, -5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
+        n1 = Util::computeNormal(
+            -1, 0, 0,
+            -2, -5, 0,
+            -2, -5, -h
+        );
+        n1.reverse();
+        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, n1)->endVertex();
+        pct->position(mat, -2, -5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, -2, -5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, n1)->endVertex();
+        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, n1)->endVertex();
         
         //green
  
@@ -277,26 +303,45 @@ int main(void) {
             
             scaleFactorn++;
 
-            pct->position(mat,x,-5 * scaleFactor,0)->color(0,0.8,0,1)->uv(u1,0)->normal(mat, 0, 1, 0)->endVertex();
+            n1 = Util::computeNormal(
+                x, -5 * scaleFactor, 0,
+                x, -5 * scaleFactor, -h,
+                x1, -5 * scaleFactorn, -h
+            );
+            pct->position(mat,x,-5 * scaleFactor,0)->color(0, 0.8, 0, 1)->uv(u1,0)->normal(mat, n1)->endVertex();
         
-            pct->position(mat2,x,-5 * scaleFactor,-h)->color(0,0.8,0,1)->uv(u1,1)->normal(mat, 0, 1, 0)->endVertex();
-            pct->position(mat2,x1,-5 * scaleFactorn,-h)->color(0,0.8,0,1)->uv(u2,1)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat2,x,-5 * scaleFactor,-h)->color(0, 0.8, 0, 1)->uv(u1,1)->normal(mat2, n1)->endVertex();
+            pct->position(mat2,x1,-5 * scaleFactorn,-h)->color(0, 0.8, 0, 1)->uv(u2,1)->normal(mat2, n1)->endVertex();
             
-            pct->position(mat, x1, -5 * scaleFactorn, 0)->color(0, 0.8, 0, 1)->uv(u2,0)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat, x1, -5 * scaleFactorn, 0)->color(0, 0.8, 0, 1)->uv(u2,0)->normal(mat, n1)->endVertex();
 
         }
 
         //end green
+        n1 = Util::computeNormal(
 
-        pct->position(mat, 3, -5, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 3, -5, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
+            3, -5, 0,
+            2, 1, 0,
+            2, 1, -h
+
+        );
+        n1.reverse();
+        pct->position(mat, 3, -5, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, n1)->endVertex();
+        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat2, n1)->endVertex();
+        pct->position(mat2, 3, -5, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat2, n1)->endVertex();
         
-        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat, 8, 5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 8, 5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
+
+        n1 = Util::computeNormal(
+            2, 1, 0,
+            8, 5, 0,
+            8, 5, -h
+        );
+        n1.reverse();
+        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, n1)->endVertex();
+        pct->position(mat, 8, 5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, 8, 5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat2, n1)->endVertex();
+        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat2, n1)->endVertex();
         
         //purple
   
@@ -313,25 +358,60 @@ int main(void) {
             float scale2 = 0.5-abs((i + step) - 0.5); scale2 = cbrt(scale2); scale2 *= 0.25; scale2 += 1;
             p1c = p1c / scale1;
             p1n = p1n / scale2;
-            pct->position(mat, p1c.x, p1c.y, 0)->color(0.75, 0, 1, 1)->uv(i,0)->normal(mat, 0, 1, 0)->endVertex();
-            pct->position(mat2, p1c.x, p1c.y, -h)->color(0.75, 0, 1, 1)->uv(i,1)->normal(mat, 0, 1, 0)->endVertex();
-            pct->position(mat2, p1n.x, p1n.y, -h)->color(0.75, 0, 1, 1)->uv(i+step,1)->normal(mat, 0, 1, 0)->endVertex();
-            pct->position(mat, p1n.x, p1n.y, 0)->color(0.75, 0, 1, 1)->uv(i+step,0)->normal(mat, 0, 1, 0)->endVertex();
+
+            n1 = Util::computeNormal(
+                p1c.x, p1c.y, 0,
+                p1c.x, p1c.y, -h,
+                p1n.x, p1n.y, -h
+
+            );
+            pct->position(mat, p1c.x, p1c.y, 0)->color(0.75, 0, 1, 0.75)->uv(i,0)->normal(mat,n1)->endVertex();
+            pct->position(mat2, p1c.x, p1c.y, -h)->color(0.75, 0, 1, 0.75)->uv(i,1)->normal(mat2, n1)->endVertex();
+            pct->position(mat2, p1n.x, p1n.y, -h)->color(0.75, 0, 1, 0.75)->uv(i+step,1)->normal(mat2, n1)->endVertex();
+            pct->position(mat, p1n.x, p1n.y, 0)->color(0.75, 0, 1, 0.75)->uv(i+step,0)->normal(mat, n1)->endVertex();
         }
         //end purple
         
-        pct->position(mat, 1, 7, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
-        pct->position(mat2, 1, 7, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
+        n1 = Util::computeNormal(
+            1, 7, 0,
+            0, 2, 0,
+            0, 2, -h
+        );
+        n1.reverse();
+        pct->position(mat, 1, 7, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, n1)->endVertex();
+        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, n1)->endVertex();
+        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat2, n1)->endVertex();
+        pct->position(mat2, 1, 7, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat2, n1)->endVertex();
 
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         pctn->process();
         pctn->mat4uniform("projection", PROJECTION);
         pctn->mat4uniform("modelview", MODELVIEW);
-        pctn->textureUniform("sampler0", bricks.getTexId());
+        if (!useWelt) {
+            pctn->textureUniform("sampler0", bricks.getTexId());
+        }
+        else {
+            pctn->textureUniform("sampler0", welt.getTexId());
+
+        }
         pct->draw(0);
         pctn->stop();
+        glDisable(GL_BLEND);
+
+
+        circleShader->process();
+        circleShader->mat4uniform("projection", PROJECTION);
+        circleShader->mat4uniform("modelview", MODELVIEW);
+        circleShader->textureUniform("sampler0", welt.getTexId());
+        Matrix4f mt = Matrix4f();
+        test->position(mt, -10, -10, -10)->color(1, 1, 1, 1)->uv(0, 0)->endVertex();
+        test->position(mt, 10, -10, -10)->color(1, 1, 1, 1)->uv(1, 0)->endVertex();
+        test->position(mt, 10, -10, 10)->color(1, 1, 1, 1)->uv(1, 1)->endVertex();
+        test->position(mt, -10, -10, 10)->color(1, 1, 1, 1)->uv(0, 1)->endVertex();
+        test->draw(0);
+        circleShader->stop();
 
         //buffer->draw(0);
 
