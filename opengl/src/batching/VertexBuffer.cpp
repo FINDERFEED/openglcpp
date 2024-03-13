@@ -53,6 +53,19 @@ public:
 		return this;
 	}
 
+	VertexBuffer* normal(Matrix4f& t,float x,float y,float z) {
+		this->checkCurrentElement(Elements::NORMAL);
+		Vec4f v = Vec4f(x, y, z, 1.0);
+		Matrix4f m = t.rotationMatrix();
+		m.transform(v);
+		vertexData->putFloat(v.x);
+		vertexData->putFloat(v.y);
+		vertexData->putFloat(v.z);
+		currentElementId++;
+		this->checkCurrentElementId();
+		return this;
+	}
+
 	VertexBuffer* color(float r,float g,float b,float a) {
 		this->checkCurrentElement(Elements::COLOR);
 		vertexData->putFloat(r);

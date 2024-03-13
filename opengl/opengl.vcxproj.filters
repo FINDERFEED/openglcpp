@@ -83,9 +83,17 @@
     <None Include="resources\shaders\position_color.v" />
     <None Include="resources\shaders\position_color.f" />
     <None Include="resources\shaders\position_color_tex.v" />
+    <None Include="resources\shaders\position_color_tex_normal.v" />
+    <None Include="resources\shaders\position_color_tex_normal.f" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Pictures\bait.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\bricks.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\textures\bait.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

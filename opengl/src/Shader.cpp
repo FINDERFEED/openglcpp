@@ -33,13 +33,12 @@ public:
 
 		glAttachShader(shaderProgram, fragmentShader);
 		glAttachShader(shaderProgram, vertexShader);
-		link(name);
-		validate(name);
-
 		for (int i = 0; i < format.getSize(); i++) {
 			Element element = format.getElement(i);
 			glBindAttribLocation(shaderProgram, i, element.getName());
 		}
+		link(name);
+		validate(name);
 
 	}
 

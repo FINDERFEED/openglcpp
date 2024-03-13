@@ -159,9 +159,13 @@
     <None Include="resources\shaders\position_color.f" />
     <None Include="resources\shaders\position_color.v" />
     <None Include="resources\shaders\position_color_tex.v" />
+    <None Include="resources\shaders\position_color_tex_normal.f" />
+    <None Include="resources\shaders\position_color_tex_normal.v" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Pictures\bait.png" />
+    <Image Include="resources\textures\bait.png" />
+    <Image Include="resources\textures\bricks.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\shaders\position_color_tex.f" />

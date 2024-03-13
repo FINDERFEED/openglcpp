@@ -246,6 +246,49 @@ public:
 		return mat;
 	}
 
+	float scaleX() {
+		return sqrt(m11*m11 + m21*m21 + m31*m31);
+	}
+	float scaleY() {
+		return sqrt(m12*m12 + m22*m22 + m32*m32);
+	}
+	float scaleZ() {
+		return sqrt(m13*m13 + m23*m23 + m33*m33);
+	}
+
+	Matrix4f rotationMatrix() {
+		Matrix4f mat = Matrix4f(*this);
+		float scaleX = this->scaleX();
+		float scaleY= this->scaleY();
+		float scaleZ = this->scaleZ();
+		mat.m14 = 0;
+		mat.m24 = 0;
+		mat.m34 = 0;
+		mat.m44 = 1;
+		if (scaleX != 0) {
+			mat.m11 /= scaleX;
+			mat.m21 /= scaleX;
+			mat.m31 /= scaleX;
+		}
+		if (scaleY != 0) {
+			mat.m12 /= scaleY;
+			mat.m22 /= scaleY;
+			mat.m32 /= scaleY;
+		}
+
+		if (scaleZ != 0) {
+			mat.m13 /= scaleZ;
+			mat.m23 /= scaleZ;
+			mat.m33 /= scaleZ;
+		}
+		
+
+		mat.m41 = 0;
+		mat.m42 = 0;
+		mat.m43 = 0;
+		
+		return mat;
+	}
 
 
 

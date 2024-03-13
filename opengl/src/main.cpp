@@ -148,6 +148,7 @@ int main(void) {
     
     Shader* shader = SHADERS.POSITION_COLOR;
     Shader* texshader = SHADERS.POSITION_COLOR_TEX;
+    Shader* pctn = SHADERS.POSITION_COLOR_TEX_NORMAL;
 
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -169,13 +170,16 @@ int main(void) {
     VertexBuffer* lineb = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_LINES);
     VertexBuffer* buffer = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_QUADS);
     VertexBuffer* test = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX,1024,GL_QUADS);
+    VertexBuffer* pct = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL,1024,GL_QUADS);
 
     Texture texture = Texture("bait");
+    Texture bricks = Texture("bricks");
 
     Matrix4f lineMat = Matrix4f();
     Matrix4f mat = Matrix4f();
     
     Matrix4f mat2 = Matrix4f();
+
     mat2.rotateZDegrees(15);
     float h = 10;
     while (!glfwWindowShouldClose(window)) {
@@ -223,34 +227,36 @@ int main(void) {
         test->draw(0);
         texshader->stop();
         
+
+
         glEnable(GL_DEPTH_TEST);
         glLineWidth(4);
         drawOrthos(lineMat,lineb);
 
-        
 
 
-        shader->process();
-        shader->mat4uniform("projection", PROJECTION);
-        shader->mat4uniform("modelview", MODELVIEW);
+
+        //shader->process();
+        //shader->mat4uniform("projection", PROJECTION);
+        //shader->mat4uniform("modelview", MODELVIEW);
 
         
 
-        buffer->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat,0,1,0)->endVertex();
+        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
         
-        buffer->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, -6, 4, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, -6, 4, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
         
         
-        buffer->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, -2, -5, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, -2, -5, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, -1, 0, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, -2, -5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, -2, -5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, -1, 0, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
         
         //green
  
@@ -258,7 +264,8 @@ int main(void) {
         for (int i = 0; i < 50; i++) {
             float x = i / 10. - 2;
             float x1 = (i+1) / 10. - 2;
-            
+            float u1 = (float)i / 50;
+            float u2 = ((float)i + 1) / 50;
             float scaleFactor = 1 - abs(i - 25) / 25.;
             scaleFactor = cbrt(scaleFactor);
             scaleFactor *= 0.25;
@@ -270,26 +277,26 @@ int main(void) {
             
             scaleFactorn++;
 
-            buffer->position(mat,x,-5 * scaleFactor,0)->color(0,0.8,0,1)->endVertex();
+            pct->position(mat,x,-5 * scaleFactor,0)->color(0,0.8,0,1)->uv(u1,0)->normal(mat, 0, 1, 0)->endVertex();
+        
+            pct->position(mat2,x,-5 * scaleFactor,-h)->color(0,0.8,0,1)->uv(u1,1)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat2,x1,-5 * scaleFactorn,-h)->color(0,0.8,0,1)->uv(u2,1)->normal(mat, 0, 1, 0)->endVertex();
             
-            buffer->position(mat2,x,-5 * scaleFactor,-h)->color(0,0.8,0,1)->endVertex();
-            buffer->position(mat2,x1,-5 * scaleFactorn,-h)->color(0,0.8,0,1)->endVertex();
-            
-            buffer->position(mat, x1, -5 * scaleFactorn, 0)->color(0, 0.8, 0, 1)->endVertex();
+            pct->position(mat, x1, -5 * scaleFactorn, 0)->color(0, 0.8, 0, 1)->uv(u2,0)->normal(mat, 0, 1, 0)->endVertex();
 
         }
 
         //end green
 
-        buffer->position(mat, 3, -5, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 3, -5, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, 3, -5, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 3, -5, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
         
-        buffer->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, 8, 5, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 8, 5, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, 2, 1, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, 8, 5, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 8, 5, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 2, 1, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
         
         //purple
   
@@ -306,21 +313,29 @@ int main(void) {
             float scale2 = 0.5-abs((i + step) - 0.5); scale2 = cbrt(scale2); scale2 *= 0.25; scale2 += 1;
             p1c = p1c / scale1;
             p1n = p1n / scale2;
-            buffer->position(mat, p1c.x, p1c.y, 0)->color(0.75, 0, 1, 1)->endVertex();
-            buffer->position(mat2, p1c.x, p1c.y, -h)->color(0.75, 0, 1, 1)->endVertex();
-            buffer->position(mat2, p1n.x, p1n.y, -h)->color(0.75, 0, 1, 1)->endVertex();
-            buffer->position(mat, p1n.x, p1n.y, 0)->color(0.75, 0, 1, 1)->endVertex();
+            pct->position(mat, p1c.x, p1c.y, 0)->color(0.75, 0, 1, 1)->uv(i,0)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat2, p1c.x, p1c.y, -h)->color(0.75, 0, 1, 1)->uv(i,1)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat2, p1n.x, p1n.y, -h)->color(0.75, 0, 1, 1)->uv(i+step,1)->normal(mat, 0, 1, 0)->endVertex();
+            pct->position(mat, p1n.x, p1n.y, 0)->color(0.75, 0, 1, 1)->uv(i+step,0)->normal(mat, 0, 1, 0)->endVertex();
         }
         //end purple
         
-        buffer->position(mat, 1, 7, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->endVertex();
-        buffer->position(mat2, 1, 7, -h)->color(1, 1, 1, 1)->endVertex();
+        pct->position(mat, 1, 7, 0)->color(1, 1, 1, 1)->uv(0,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, 0, 2, 0)->color(1, 1, 1, 1)->uv(1,0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 0, 2, -h)->color(1, 1, 1, 1)->uv(1,1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat2, 1, 7, -h)->color(1, 1, 1, 1)->uv(0,1)->normal(mat, 0, 1, 0)->endVertex();
 
-        buffer->draw(0);
 
-        shader->stop();
+        pctn->process();
+        pctn->mat4uniform("projection", PROJECTION);
+        pctn->mat4uniform("modelview", MODELVIEW);
+        pctn->textureUniform("sampler0", bricks.getTexId());
+        pct->draw(0);
+        pctn->stop();
+
+        //buffer->draw(0);
+
+        //shader->stop();
 
         glfwSwapBuffers(window);
         prevPosX = posX;
