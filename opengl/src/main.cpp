@@ -16,6 +16,7 @@
 #include "RenderUtil.cpp"
 #include "Matrix4fStack.cpp"
 #include "system/Texture.cpp"
+#include "system/ObjModel.cpp"
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;

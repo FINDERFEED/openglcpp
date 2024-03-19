@@ -1,15 +1,30 @@
 #pragma once
 #include <iostream>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include "math/Vec3f.cpp"
+#include <regex>
 #define PI 3.1415926
 
 class Util {
 
 public:
 
+	static std::vector<std::string>* splitStringByRegex(std::string s,std::string reg) {
+		std::regex rgx(reg);
+		std::sregex_token_iterator iter(s.begin(),s.end(),rgx,-1);
+		std::sregex_token_iterator end;
+		std::vector<std::string>* strs = new std::vector<std::string>();
+		while (iter != end) {
+			if (iter->length()) {
+				strs->push_back(*iter);
+			}
+			iter++;
+		}
+		return strs;
+	}
 
 	static std::string readFile(std::string& path) {
 		std::ifstream stream(path);
