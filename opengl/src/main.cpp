@@ -123,6 +123,8 @@ void drawOrthos(Matrix4f& mat, VertexBuffer* b) {
 
 int main(void) {
 
+    ObjModel* model = ObjModel::loadModel("testsphere");
+
     GLFWwindow* window;
 
     if (!glfwInit())
@@ -180,6 +182,7 @@ int main(void) {
     VertexBuffer* buffer = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR,1024,GL_QUADS);
     VertexBuffer* test = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX,1024,GL_QUADS);
     VertexBuffer* pct = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL,1024,GL_QUADS);
+    VertexBuffer* pctr = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL,1024,GL_TRIANGLES);
 
     Texture texture = Texture("bait");
     Texture bricks = Texture("bricks");
@@ -398,6 +401,12 @@ int main(void) {
 
         }
         pct->draw(0);
+        
+        Matrix4f ch;
+        ch.translate(0, 10, 0);
+        ch.scale(3, 3, 3);
+        model->render(ch, pct, pctr, 1, 1, 1, 1, 1);
+        
         pctn->stop();
         glDisable(GL_BLEND);
 
