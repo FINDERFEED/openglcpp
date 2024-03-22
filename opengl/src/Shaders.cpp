@@ -17,6 +17,7 @@ public:
 	Shader* POSITION_COLOR_TEX = nullptr;
 	Shader* POSITION_COLOR_TEX_CIRCLE = nullptr;
 	Shader* POSITION_COLOR_TEX_NORMAL = nullptr;
+	Shader* SHADOW = nullptr;
 
 
 	void initialize() {
@@ -24,6 +25,7 @@ public:
 		POSITION_COLOR_TEX = new Shader("position_color_tex", *VERTEX_FORMATS.POSITION_COLOR_TEX);
 		POSITION_COLOR_TEX_CIRCLE = new Shader("position_color_tex_circle", *VERTEX_FORMATS.POSITION_COLOR_TEX);
 		POSITION_COLOR_TEX_NORMAL = new Shader("position_color_tex_normal", *VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL);
+		SHADOW = new Shader("shadow", *VERTEX_FORMATS.POSITION);
 	}
 
 };

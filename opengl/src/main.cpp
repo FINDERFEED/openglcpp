@@ -17,6 +17,7 @@
 #include "Matrix4fStack.cpp"
 #include "system/Texture.cpp"
 #include "system/ObjModel.cpp"
+#include "system/Framebuffer.cpp"
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;
@@ -160,6 +161,7 @@ int main(void) {
     Shader* texshader = SHADERS.POSITION_COLOR_TEX;
     Shader* pctn = SHADERS.POSITION_COLOR_TEX_NORMAL;
     Shader* circleShader = SHADERS.POSITION_COLOR_TEX_CIRCLE;
+    Shader* shadow = SHADERS.SHADOW;
 
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -187,6 +189,8 @@ int main(void) {
     Texture texture = Texture("bait");
     Texture bricks = Texture("bricks");
     Texture welt = Texture("welt");
+    Framebuffer framebuffer = Framebuffer("shadow",0,0,0,1,1920/2,1080/2,0);
+    
 
     Matrix4f lineMat = Matrix4f();
     Matrix4f mat = Matrix4f();
@@ -242,7 +246,7 @@ int main(void) {
         texshader->process();
         texshader->mat4uniform("projection", PROJECTION);
         texshader->mat4uniform("modelview", MODELVIEW);
-        texshader->textureUniform("sampler0", texture.getTexId());
+        texshader->textureUniform("sampler0", texture);
         test->draw(0);
         texshader->stop();
         
@@ -394,27 +398,37 @@ int main(void) {
         pctn->mat4uniform("projection", PROJECTION);
         pctn->mat4uniform("modelview", MODELVIEW);
         if (!useWelt) {
-            pctn->textureUniform("sampler0", bricks.getTexId());
+            pctn->textureUniform("sampler0", bricks);
         }
         else {
-            pctn->textureUniform("sampler0", welt.getTexId());
+            pctn->textureUniform("sampler0", welt);
 
         }
         pct->draw(0);
-        
-        Matrix4f ch;
-        ch.translate(0, 10, 0);
-        ch.scale(3, 3, 3);
-        model->render(ch, pct, pctr, 1, 1, 1, 1, 1);
-        
         pctn->stop();
+
+        Matrix4f ch;
+        ch.translate(0, 0, 0);
+        ch.scale(3, 3, 3);
+        framebuffer.bindWrite();
+
+        shadow->process();
+        model->render(ch, pct, pctr, 1, 1, 1, 1, 1);
+        framebuffer.unbind();
+        shadow->stop();
+
+
+        
+
+
+        
         glDisable(GL_BLEND);
 
 
         circleShader->process();
         circleShader->mat4uniform("projection", PROJECTION);
         circleShader->mat4uniform("modelview", MODELVIEW);
-        circleShader->textureUniform("sampler0", welt.getTexId());
+        circleShader->textureUniform("sampler0", welt);
         Matrix4f mt = Matrix4f();
         test->position(mt, -10, -10, -10)->color(1, 1, 1, 1)->uv(0, 0)->endVertex();
         test->position(mt, 10, -10, -10)->color(1, 1, 1, 1)->uv(1, 0)->endVertex();
@@ -423,9 +437,6 @@ int main(void) {
         test->draw(0);
         circleShader->stop();
 
-        //buffer->draw(0);
-
-        //shader->stop();
 
         glfwSwapBuffers(window);
         prevPosX = posX;

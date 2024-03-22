@@ -84,6 +84,9 @@
     <ClCompile Include="src\math\Vec2f.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\system\Framebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\position_color.v" />
@@ -93,6 +96,7 @@
     <None Include="resources\shaders\position_color_tex_normal.f" />
     <None Include="resources\shaders\position_color_tex_circle.f" />
     <None Include="resources\shaders\position_color_tex_circle.v" />
+    <None Include="resources\shaders\shadow.v" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Pictures\bait.png">
@@ -110,6 +114,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\shaders\position_color_tex.f">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\shaders\shadow.f">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

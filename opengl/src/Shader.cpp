@@ -5,6 +5,7 @@
 #include "batching/VertexFormat.cpp";
 #include "system/Texture.cpp";
 
+
 class Shader {
 
 public:
@@ -64,8 +65,8 @@ public:
 		delete buffer;
 	}
 
-	void textureUniform(const char* name,GLuint texId) {
-		glActiveTexture(GL_TEXTURE0);
+	void textureUniform(const char* name,GLuint texId,int texNumber) {
+		glActiveTexture(GL_TEXTURE0 + texNumber);
 		glBindTexture(GL_TEXTURE_2D, texId);
 
 		int pos = glGetUniformLocation(shaderProgram, name);
@@ -73,11 +74,15 @@ public:
 			std::cout << "Uniform " << name << " doesn't exist in " << this->name << std::endl;
 			exit(1);
 		}
-		glUniform1i(pos, 0);
+		glUniform1i(pos, texNumber);
+	}
+
+	void textureUniform(const char* name, Texture& tex,int texNumber) {
+		this->textureUniform(name, tex.getTexId(),texNumber);
 	}
 
 	void textureUniform(const char* name, Texture& tex) {
-		this->textureUniform(name, tex.getTexId());
+		this->textureUniform(name, tex.getTexId(),0);
 	}
 
 	void process() {

@@ -153,6 +153,7 @@
     <ClCompile Include="src\Shaders.cpp" />
     <ClCompile Include="src\stb\stb_image.cpp" />
     <ClCompile Include="src\system\Camera.cpp" />
+    <ClCompile Include="src\system\Framebuffer.cpp" />
     <ClCompile Include="src\system\ObjModel.cpp" />
     <ClCompile Include="src\system\Texture.cpp" />
     <ClCompile Include="src\Util.cpp" />
@@ -165,6 +166,7 @@
     <None Include="resources\shaders\position_color_tex_circle.v" />
     <None Include="resources\shaders\position_color_tex_normal.f" />
     <None Include="resources\shaders\position_color_tex_normal.v" />
+    <None Include="resources\shaders\shadow.v" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Pictures\bait.png" />
@@ -174,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\shaders\position_color_tex.f" />
+    <ClInclude Include="resources\shaders\shadow.f" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\models\testsphere.obj">
