@@ -166,6 +166,8 @@
     <None Include="resources\shaders\position_color_tex_circle.v" />
     <None Include="resources\shaders\position_color_tex_normal.f" />
     <None Include="resources\shaders\position_color_tex_normal.v" />
+    <None Include="resources\shaders\position_color_tex_normal_shadow.f" />
+    <None Include="resources\shaders\position_color_tex_normal_shadow.v" />
     <None Include="resources\shaders\shadow.v" />
   </ItemGroup>
   <ItemGroup>

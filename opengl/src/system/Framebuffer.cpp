@@ -29,7 +29,7 @@ public:
 		}
 		if (useDepth) {
 			TextureParameters params = TextureParameters().setLoadParameters(GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT)
-				.setResolution(dWidth, dHeight);
+				.setResolution(dWidth, dHeight).setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 			Texture* texture = new Texture("generated_depth:" + name, params, 0);
 			this->depthTexture = texture;
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,texture->getTexId(), 0);

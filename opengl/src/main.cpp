@@ -30,7 +30,7 @@ static GLFWwindow* WINDOW;
 static int useWelt = 0;
 
 static void updateProjectionMatrix(int nw, int nh) {
-    PROJECTION = Matrix4f::perspective(90, nw / (float)nh, Z_NEAR, Z_FAR);
+    PROJECTION = Matrix4f::perspective(60, nw / (float)nh, Z_NEAR, Z_FAR);
 }
 
 static void setModelviewMatrix(Vec3f& eye,Vec3f& up, Vec3f& lookAt) {
@@ -77,9 +77,9 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
         }
         d = !d;
     } else if (key == GLFW_KEY_SPACE) {
-        camera.y++;
+        camera.y += 0.5;
     } else if (key == GLFW_KEY_LEFT_SHIFT) {
-        camera.y--;
+        camera.y -= 0.5;
     }
     else if (key == GLFW_KEY_P && action == GLFW_PRESS) {
         useWelt = !useWelt;
@@ -189,7 +189,7 @@ int main(void) {
     Texture texture = Texture("bait");
     Texture bricks = Texture("bricks");
     Texture welt = Texture("welt");
-    Framebuffer framebuffer = Framebuffer("shadow",0,0,0,1,1920/2,1080/2,0);
+    Framebuffer framebuffer = Framebuffer("shadow",0,0,0,1,1920,1080,0);
     
 
     Matrix4f lineMat = Matrix4f();
@@ -199,7 +199,17 @@ int main(void) {
     mat2.rotateZDegrees(15);
 
     float h = 10;
+    float frames = 0;
     while (!glfwWindowShouldClose(window)) {
+        
+        Matrix4f lightProj = Matrix4f::perspective(60, 1, Z_NEAR, Z_FAR);
+ 
+        Vec3f eye = Vec3f(0, 100, 0);
+        Vec3f up = Vec3f(0, 1, 0);
+        Vec3f lookAt = Vec3f(0,0,0.01);
+        Matrix4f lightModelview = Matrix4f::modelview(eye,lookAt,up);
+
+        
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       /*  if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
@@ -257,7 +267,8 @@ int main(void) {
         drawOrthos(lineMat,lineb);
 
 
-        
+        mat.translate(0, 100, 0);
+        mat2.translate(0, 100, 0);
         Vec3f n1 = Util::computeNormal(
             -6, 4, 0,
             0, 2, 0,
@@ -404,38 +415,53 @@ int main(void) {
             pctn->textureUniform("sampler0", welt);
 
         }
+        mat.translate(0, -100, 0);
+        mat2.translate(0, -100, 0);
         pct->draw(0);
         pctn->stop();
 
         Matrix4f ch;
-        ch.translate(0, 0, 0);
-        ch.scale(3, 3, 3);
+        ch.translate(0, sin(frame / PI / 10), 0);
+
         framebuffer.bindWrite();
+        Texture d = *framebuffer.getDepthTexture();
+        glViewport(0, 0, d.getWidth(), d.getHeight());
+        glEnable(GL_DEPTH_TEST);
 
         shadow->process();
+
+        shadow->mat4uniform("projection", lightProj);
+        shadow->mat4uniform("modelview",lightModelview);
         model->render(ch, pct, pctr, 1, 1, 1, 1, 1);
         framebuffer.unbind();
+        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         shadow->stop();
 
+    
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->process();
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->mat4uniform("projection", PROJECTION);
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->mat4uniform("modelview", MODELVIEW);
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->mat4uniform("lightProjection", lightProj);
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->mat4uniform("lightModelview", lightModelview);
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->textureUniform("sampler0", bricks);
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->textureUniform("shadowSampler", d,1);
 
+        pct->position(mat, -100, -10, -100)->color(1, 1, 1, 1)->uv(0, 0)->normal(mat,0,1,0)->endVertex();
+        pct->position(mat, 100, -10, -100)->color(1, 1, 1, 1)->uv(1, 0)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, 100, -10, 100)->color(1, 1, 1, 1)->uv(1, 1)->normal(mat, 0, 1, 0)->endVertex();
+        pct->position(mat, -100, -10, 100)->color(1, 1, 1, 1)->uv(0, 1)->normal(mat, 0, 1, 0)->endVertex();
+
+        pct->draw(0);
+
+        SHADERS.POSITION_COLOR_TEX_NORMAL_SHADOW->stop();
         
-
-
-        
+        framebuffer.bindWrite();
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        framebuffer.unbind();
+                
         glDisable(GL_BLEND);
 
-
-        circleShader->process();
-        circleShader->mat4uniform("projection", PROJECTION);
-        circleShader->mat4uniform("modelview", MODELVIEW);
-        circleShader->textureUniform("sampler0", welt);
-        Matrix4f mt = Matrix4f();
-        test->position(mt, -10, -10, -10)->color(1, 1, 1, 1)->uv(0, 0)->endVertex();
-        test->position(mt, 10, -10, -10)->color(1, 1, 1, 1)->uv(1, 0)->endVertex();
-        test->position(mt, 10, -10, 10)->color(1, 1, 1, 1)->uv(1, 1)->endVertex();
-        test->position(mt, -10, -10, 10)->color(1, 1, 1, 1)->uv(0, 1)->endVertex();
-        test->draw(0);
-        circleShader->stop();
 
 
         glfwSwapBuffers(window);

@@ -87,6 +87,8 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, parameters.wrapS);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, parameters.minFilter);//nearest linear etc
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, parameters.magFilter);
+		float col[] = { 1.,1.,1.,1. };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,col);
 
 		glTexImage2D(GL_TEXTURE_2D, 0,parameters.internalFormat,this->width,this->height,0,parameters.pixelFormat, GL_UNSIGNED_BYTE, bytes);
 	

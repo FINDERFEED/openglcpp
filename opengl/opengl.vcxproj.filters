@@ -97,6 +97,8 @@
     <None Include="resources\shaders\position_color_tex_circle.f" />
     <None Include="resources\shaders\position_color_tex_circle.v" />
     <None Include="resources\shaders\shadow.v" />
+    <None Include="resources\shaders\position_color_tex_normal_shadow.v" />
+    <None Include="resources\shaders\position_color_tex_normal_shadow.f" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Pictures\bait.png">

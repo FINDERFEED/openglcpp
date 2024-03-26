@@ -103,7 +103,7 @@ private:
 			char* c = new char[len];
 			glGetProgramInfoLog(shaderProgram, len, &len, c);
 			std::cout << "Error linking shader: " << name << " " << c << std::endl;
-			throw "Error linking shader";
+			exit(1);
 		}
 	}
 
@@ -115,7 +115,7 @@ private:
 			char* c = new char[len];
 			glGetProgramInfoLog(shaderProgram, len, &len, c);
 			std::cout << "Error validating shader: " << name << " " << c << std::endl;
-			throw "Error validating shader";
+			exit(1);
 		}
 	}
 
@@ -132,7 +132,7 @@ private:
 			std::cout << mes << std::endl;
 			std::cout << "Error compiling vertex shader" << name << ": " << mes << std::endl;
 			delete[] mes;
-			throw "Error compiling vertex shader";
+			exit(1);
 		}
 
 		glShaderSource(fragmentShader, 1, &fragmentC, nullptr);
@@ -146,7 +146,7 @@ private:
 			glGetShaderInfoLog(fragmentShader, len, &len, mes);
 			std::cout << "Error compiling fragment shader" << name << ": " << mes << std::endl;
 			delete[] mes;
-			throw "Error compiling fragment shader";
+			exit(1);
 		}
 	}
 
