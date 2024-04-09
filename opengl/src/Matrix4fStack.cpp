@@ -49,6 +49,10 @@ public:
 		Quaternion q = Quaternion(x, y, z, degrees);
 		this->getLast()->rotate(q);
 	}
+	void rotate(Quaternion q) {
+		this->checkEmpty();
+		this->getLast()->rotate(q);
+	}
 
 
 	void checkEmpty() {

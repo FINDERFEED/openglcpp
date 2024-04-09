@@ -5,14 +5,14 @@
 class Camera {
 
 private:
-	float pitch = 0;
+	
 
 public:
 	float x = 0;
 	float y = 0;
 	float z = 0;
 	float yaw = 0;
-	
+	float pitch = 0;
 
 
 
@@ -35,6 +35,13 @@ public:
 		mat.transform(look);
 		look.normalize();
 		return look;
+	}
+
+	Quaternion getRotationQuaternion() {
+		Quaternion q = Quaternion(0, 1, 0, yaw);
+		Quaternion q1 = Quaternion(1, 0, 0, pitch);
+		q.multiply(q1);
+		return q;
 	}
 
 	void move(Vec3f& move) {

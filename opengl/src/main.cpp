@@ -18,16 +18,22 @@
 #include "system/Texture.cpp"
 #include "system/ObjModel.cpp"
 #include "system/Framebuffer.cpp"
+#include "system/Mouse.cpp";
+#include "system/MouseMoveablePoints.cpp";
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;
 static int WINDOW_WIDTH = 640;
 static int WINDOW_HEIGHT = 480;
-static Matrix4f PROJECTION = Matrix4f::perspective(90, WINDOW_WIDTH / (float)WINDOW_HEIGHT, Z_NEAR, Z_FAR);
+static Matrix4f PROJECTION = Matrix4f::perspective(60, WINDOW_WIDTH / (float)WINDOW_HEIGHT, Z_NEAR, Z_FAR);
 static Matrix4f MODELVIEW;
 static Camera camera;
 static GLFWwindow* WINDOW;
 static int useWelt = 0;
+static Mouse mouse;
+static MouseMoveablePoints points;
+
+
 
 static void updateProjectionMatrix(int nw, int nh) {
     PROJECTION = Matrix4f::perspective(60, nw / (float)nh, Z_NEAR, Z_FAR);
@@ -42,9 +48,12 @@ void onWindowResize(GLFWwindow* window, int width, int height) {
     updateProjectionMatrix(width, height);
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
+    points.onResize(width, height);
 }
 
 static Vec3f* e = new Vec3f(0,0,0);
+
+
 
 int d = 0;
 void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -86,17 +95,25 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
     }
 }
 
-float prevPosX = 0;
-float prevPosY = 0;
-float posX = 0;
-float posY = 0;
+
 
 void setCursorPos(GLFWwindow* window, double xpos, double ypos) {
-    posX = xpos;
-    posY = ypos;
+    
+    mouse.setPos(xpos, ypos);
     if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-        camera.yaw += -(posX - prevPosX) * 0.1;
-        camera.setPitch(camera.getPitch() + -(posY - prevPosY) * 0.1);
+        camera.yaw += -(mouse.getMouseDX()) * 0.1;
+        camera.setPitch(camera.getPitch() + -(mouse.getMouseDY()) * 0.1);
+    }
+}
+
+void onMouseButtonPress(GLFWwindow* window, int btn, int action, int mods) {
+    
+    if (action == GLFW_PRESS) {
+        mouse.clickButton(btn);
+        int id = points.onMouseClick(camera, PROJECTION, MODELVIEW, (int)mouse.getMouseX(), (int)mouse.getMouseY());
+        std::cout << id << std::endl;
+    } else if (action == GLFW_RELEASE) {
+        mouse.releaseButton(btn);
     }
 }
 
@@ -121,6 +138,40 @@ void drawOrthos(Matrix4f& mat, VertexBuffer* b) {
 
 }
 
+float ermit(float p, float p1, float p2, float dir1, float dir2) {
+    return p1 * (2 * p * p * p - 3 * p * p + 1) + p2 * (-2 * p * p * p + 3 * p * p)
+        + dir1 * (p * p * p - 2 * p * p + p) + dir2 * (p * p * p - p * p);
+}
+
+Vec3f ermitSpline(float p,Vec3f p1, Vec3f p2,Vec3f dir1,Vec3f dir2) {
+    Vec3f v = Vec3f(
+        ermit(p,p1.x,p2.x,dir1.x,dir2.x),
+        ermit(p,p1.y,p2.y,dir1.y,dir2.y),
+        ermit(p,p1.z,p2.z,dir1.z,dir2.z)
+    );
+    return v;
+}
+
+float bezier(float p, float p1,float p2,float p3,float p4) {
+    return (1 - p) * (1 - p) * (1 - p) * p1 +
+        3 * p * (1 - p) * (1 - p) * p2 +
+        3 * p * p * (1 - p) * p3 +
+        p * p * p * p4;
+}
+
+Vec3f bezierSpline(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
+    Vec3f v = Vec3f(
+        bezier(p,p1.x,p2.x,p3.x,p4.x),
+        bezier(p,p1.y,p2.y,p3.y,p4.y),
+        bezier(p,p1.z,p2.z,p3.z,p4.z)
+    );
+    return v;
+}
+
+void lineBetween(Matrix4f& mat,VertexBuffer* line,Vec3f p1,Vec3f p2,float r,float g,float b,float a) {
+    line->position(mat, p1.x, p1.y, p1.z)->color(r, g, b, a)->endVertex();
+    line->position(mat, p2.x, p2.y, p2.z)->color(r, g, b, a)->endVertex();
+}
 
 int main(void) {
 
@@ -169,6 +220,8 @@ int main(void) {
     glfwSetWindowSizeCallback(window,*onWindowResize);
     glfwSetKeyCallback(window, *onKeyInput);
     glfwSetCursorPosCallback(window, *setCursorPos);
+    glfwSetMouseButtonCallback(window, *onMouseButtonPress);
+
 
 
 
@@ -198,13 +251,16 @@ int main(void) {
     Matrix4f mat2 = Matrix4f();
     mat2.rotateZDegrees(15);
 
+    points = MouseMoveablePoints(WINDOW_WIDTH, WINDOW_HEIGHT);
+    points.addPoint(0, 0, 0);
+
     float h = 10;
     float frames = 0;
     while (!glfwWindowShouldClose(window)) {
         
         Matrix4f lightProj = Matrix4f::perspective(60, 1, Z_NEAR, Z_FAR);
  
-        Vec3f eye = Vec3f(0, 100, 0);
+        Vec3f eye = Vec3f(0, 40, 0);
         Vec3f up = Vec3f(0, 1, 0);
         Vec3f lookAt = Vec3f(0,0,0.01);
         Matrix4f lightModelview = Matrix4f::modelview(eye,lookAt,up);
@@ -266,9 +322,6 @@ int main(void) {
         glLineWidth(4);
         drawOrthos(lineMat,lineb);
 
-
-        mat.translate(0, 100, 0);
-        mat2.translate(0, 100, 0);
         Vec3f n1 = Util::computeNormal(
             -6, 4, 0,
             0, 2, 0,
@@ -415,8 +468,7 @@ int main(void) {
             pctn->textureUniform("sampler0", welt);
 
         }
-        mat.translate(0, -100, 0);
-        mat2.translate(0, -100, 0);
+
         pct->draw(0);
         pctn->stop();
 
@@ -464,9 +516,63 @@ int main(void) {
 
 
 
+
+        Vec3f begin = Vec3f(5,0,5);
+        Vec3f end = Vec3f(10,0,10);
+        Vec3f dirb = Vec3f(0, 10, 0);
+        Vec3f dire = Vec3f(5,-10,5);
+        Vec3f v1 = begin;
+        Vec3f v2 = begin + dirb;
+        lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 1, 1)->endVertex();
+        lineb->position(mat, v2.x, v2.y, v2.z)->color(1, 1, 1, 1)->endVertex();
+        v1 = end;
+        v2 = end + dire;
+        lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 1, 1)->endVertex();
+        lineb->position(mat, v2.x, v2.y, v2.z)->color(1, 1, 1, 1)->endVertex();
+
+        float st = 0.05;
+        for (float i = 0; i < 1; i += st) {
+            float i1 = i + st;
+            Vec3f v = ermitSpline(i, begin, end, dirb, dire);
+            Vec3f v1 = ermitSpline(i1, begin, end, dirb, dire);
+            lineb->position(mat, v.x, v.y, v.z)->color(1, 1, 0,1)->endVertex();
+            lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 0,1)->endVertex();
+        }
+
+       
+
+        mat.translate(20, 20, 20);
+        lineBetween(mat, lineb, begin, dirb, 1, 1, 1, 1);
+        lineBetween(mat, lineb, dirb, dire, 1, 1, 1, 1);
+        lineBetween(mat, lineb, dire, end, 1, 1, 1, 1);
+        for (float i = 0; i < 1; i += st) {
+            float i1 = i + st;
+            Vec3f v = bezierSpline(i, begin, dirb, dire, end);
+            Vec3f v1 = bezierSpline(i1, begin, dirb, dire, end);
+            lineb->position(mat, v.x, v.y, v.z)->color(1, 1, 0,1)->endVertex();
+            lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 0,1)->endVertex();
+        }
+        mat.translate(-20, -20, -20);
+
+
+
+        SHADERS.POSITION_COLOR->process();
+        SHADERS.POSITION_COLOR->mat4uniform("projection", PROJECTION);
+        SHADERS.POSITION_COLOR->mat4uniform("modelview", MODELVIEW);
+        
+        lineb->draw(0);
+
+        
+        
+        SHADERS.POSITION_COLOR->stop();
+
+        points.renderAllPoints(camera, PROJECTION, MODELVIEW);
+
+
+
         glfwSwapBuffers(window);
-        prevPosX = posX;
-        prevPosY = posY;
+        mouse.tick();
+
         glfwPollEvents();
         frame++;
     }

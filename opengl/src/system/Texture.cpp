@@ -53,6 +53,7 @@ public:
 };
 
 static TextureParameters DEFAULT_PARAMETERS = TextureParameters();
+static TextureParameters SHADOW_DEPTH_PARAMETERS = TextureParameters().setLoadParameters(GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT).setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 
 class Texture {
 

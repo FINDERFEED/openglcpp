@@ -154,6 +154,8 @@
     <ClCompile Include="src\stb\stb_image.cpp" />
     <ClCompile Include="src\system\Camera.cpp" />
     <ClCompile Include="src\system\Framebuffer.cpp" />
+    <ClCompile Include="src\system\Mouse.cpp" />
+    <ClCompile Include="src\system\MouseMoveablePoints.cpp" />
     <ClCompile Include="src\system\ObjModel.cpp" />
     <ClCompile Include="src\system\Texture.cpp" />
     <ClCompile Include="src\Util.cpp" />
