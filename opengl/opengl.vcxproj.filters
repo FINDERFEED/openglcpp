@@ -93,6 +93,9 @@
     <ClCompile Include="src\system\MouseMoveablePoints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\misc\BezierSurface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\position_color.v" />
@@ -119,6 +122,9 @@
     <Image Include="resources\textures\welt.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="resources\textures\cringe.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\shaders\position_color_tex.f">
@@ -130,5 +136,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\models\testsphere.obj" />
+    <Text Include="resources\models\rocket.obj" />
   </ItemGroup>
 </Project>

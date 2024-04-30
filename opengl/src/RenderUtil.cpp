@@ -10,9 +10,9 @@ class RenderUtil {
 public:
 
      static void applyMovementMatrixRotations(Matrix4f& matrix, Vec3f& vec) {
-        double angleY = Util::toDegrees(atan2(vec.x, vec.z));
-        double angleX = Util::toDegrees(atan2(sqrt(vec.x * vec.x + vec.z * vec.z), vec.y));
-        matrix.rotateZDegrees(angleY);
+        float angleY = Util::toDegrees(atan2(vec.x, vec.z));
+        float angleX = Util::toDegrees(atan2(sqrt(vec.x * vec.x + vec.z * vec.z), vec.y));
+        matrix.rotateYDegrees(angleY);
         matrix.rotateXDegrees(angleX);
     }
 

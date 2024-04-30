@@ -148,6 +148,7 @@
     <ClCompile Include="src\math\Vec3f.cpp" />
     <ClCompile Include="src\math\Vec4f.cpp" />
     <ClCompile Include="src\Matrix4fStack.cpp" />
+    <ClCompile Include="src\misc\BezierSurface.cpp" />
     <ClCompile Include="src\RenderUtil.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
@@ -176,6 +177,7 @@
     <Image Include="..\..\..\Pictures\bait.png" />
     <Image Include="resources\textures\bait.png" />
     <Image Include="resources\textures\bricks.png" />
+    <Image Include="resources\textures\cringe.png" />
     <Image Include="resources\textures\welt.png" />
   </ItemGroup>
   <ItemGroup>
@@ -184,6 +186,13 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\models\testsphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="resources\models\rocket.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>

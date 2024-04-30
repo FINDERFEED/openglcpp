@@ -86,4 +86,13 @@ public:
 		return computeNormal(p1, p2, p3);
 	}
 
+	static int factorial(int val) {
+		float result = 1;
+		while (val > 1) {
+			result *= val;
+			val--;
+		}
+		return result;
+	}
+
 };

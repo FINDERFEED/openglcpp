@@ -20,6 +20,7 @@
 #include "system/Framebuffer.cpp"
 #include "system/Mouse.cpp";
 #include "system/MouseMoveablePoints.cpp";
+#include "misc/BezierSurface.cpp";
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;
@@ -31,7 +32,7 @@ static Camera camera;
 static GLFWwindow* WINDOW;
 static int useWelt = 0;
 static Mouse mouse;
-static MouseMoveablePoints points;
+static MouseMoveablePoints* points;
 
 
 
@@ -48,7 +49,7 @@ void onWindowResize(GLFWwindow* window, int width, int height) {
     updateProjectionMatrix(width, height);
     WINDOW_WIDTH = width;
     WINDOW_HEIGHT = height;
-    points.onResize(width, height);
+    points->onResize(width, height);
 }
 
 static Vec3f* e = new Vec3f(0,0,0);
@@ -99,19 +100,19 @@ void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 void setCursorPos(GLFWwindow* window, double xpos, double ypos) {
     
-    mouse.setPos(xpos, ypos);
-    if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+    mouse.setPos(xpos,WINDOW_HEIGHT -  ypos);
+    /*if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
         camera.yaw += -(mouse.getMouseDX()) * 0.1;
-        camera.setPitch(camera.getPitch() + -(mouse.getMouseDY()) * 0.1);
-    }
+        camera.setPitch(camera.getPitch() + (mouse.getMouseDY()) * 0.1);
+    }*/
 }
 
 void onMouseButtonPress(GLFWwindow* window, int btn, int action, int mods) {
     
     if (action == GLFW_PRESS) {
         mouse.clickButton(btn);
-        int id = points.onMouseClick(camera, PROJECTION, MODELVIEW, (int)mouse.getMouseX(), (int)mouse.getMouseY());
-        std::cout << id << std::endl;
+        int id = points->onMouseClick(camera, PROJECTION, MODELVIEW, (int)mouse.getMouseX(), (int)mouse.getMouseY(),btn);
+        
     } else if (action == GLFW_RELEASE) {
         mouse.releaseButton(btn);
     }
@@ -152,11 +153,18 @@ Vec3f ermitSpline(float p,Vec3f p1, Vec3f p2,Vec3f dir1,Vec3f dir2) {
     return v;
 }
 
-float bezier(float p, float p1,float p2,float p3,float p4) {
+float bezier(float p, float p1, float p2, float p3, float p4) {
     return (1 - p) * (1 - p) * (1 - p) * p1 +
         3 * p * (1 - p) * (1 - p) * p2 +
         3 * p * p * (1 - p) * p3 +
         p * p * p * p4;
+}
+
+float bezierDerivative(float p, float p1,float p2,float p3,float p4) {
+    return -3 * (p - 1) * (p - 1) * p1 +
+        3 * (p - 1) * (3 * p - 1) * p2 +
+        3 * -p * (3 * p - 2) * p3 +
+        3 * p * p * p4;
 }
 
 Vec3f bezierSpline(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
@@ -164,6 +172,14 @@ Vec3f bezierSpline(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
         bezier(p,p1.x,p2.x,p3.x,p4.x),
         bezier(p,p1.y,p2.y,p3.y,p4.y),
         bezier(p,p1.z,p2.z,p3.z,p4.z)
+    );
+    return v;
+}
+Vec3f bezierDirection(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
+    Vec3f v = Vec3f(
+        bezierDerivative(p,p1.x,p2.x,p3.x,p4.x),
+        bezierDerivative(p,p1.y,p2.y,p3.y,p4.y),
+        bezierDerivative(p,p1.z,p2.z,p3.z,p4.z)
     );
     return v;
 }
@@ -176,6 +192,7 @@ void lineBetween(Matrix4f& mat,VertexBuffer* line,Vec3f p1,Vec3f p2,float r,floa
 int main(void) {
 
     ObjModel* model = ObjModel::loadModel("testsphere");
+    ObjModel* rocket = ObjModel::loadModel("rocket");
 
     GLFWwindow* window;
 
@@ -242,6 +259,7 @@ int main(void) {
     Texture texture = Texture("bait");
     Texture bricks = Texture("bricks");
     Texture welt = Texture("welt");
+    Texture rocketTex = Texture("cringe");
     Framebuffer framebuffer = Framebuffer("shadow",0,0,0,1,1920,1080,0);
     
 
@@ -251,11 +269,26 @@ int main(void) {
     Matrix4f mat2 = Matrix4f();
     mat2.rotateZDegrees(15);
 
-    points = MouseMoveablePoints(WINDOW_WIDTH, WINDOW_HEIGHT);
-    points.addPoint(0, 0, 0);
+    points = new MouseMoveablePoints(WINDOW_WIDTH, WINDOW_HEIGHT);
+    Vec3f* point = new Vec3f(0,1,0);
+    points->addPoint(point);
+
+    Vec3f* pb1 = new Vec3f(15, 0, 5);
+    Vec3f* pb2 = new Vec3f(15, 0, 15);
+    Vec3f* pb3 = new Vec3f(15, 10, 7);
+    Vec3f* pb4 = new Vec3f(15, 10, 12);
+    points->addPoint(pb1);
+    points->addPoint(pb2);
+    points->addPoint(pb3);
+    points->addPoint(pb4);
+
+    Vec3f center = Vec3f(30, 0, 30);
+    BezierSurface surface = BezierSurface(center,10);
+    surface.addAllPointsAsMoveable(*points);
 
     float h = 10;
     float frames = 0;
+    float rocketFlightProgress = 0;
     while (!glfwWindowShouldClose(window)) {
         
         Matrix4f lightProj = Matrix4f::perspective(60, 1, Z_NEAR, Z_FAR);
@@ -268,10 +301,6 @@ int main(void) {
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      /*  if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-            mat.rotateZDegrees(1);
-            mat2.rotateZDegrees(1);
-        }*/
         
         MODELVIEW = camera.matrix();
         glDisable(GL_DEPTH_TEST);
@@ -469,6 +498,28 @@ int main(void) {
 
         }
 
+        glDisable(GL_CULL_FACE);
+        step = 0.1f;
+        Matrix4f bezierMat = Matrix4f();
+        for (float u = 0; u < 1; u += step) {
+            for (float v = 0; v < 1; v += step) {
+                Vec3f p1 = surface.calcPoint(u, v);
+                Vec3f p2 = surface.calcPoint(u + step, v);
+                Vec3f p3 = surface.calcPoint(u + step, v + step);
+                Vec3f p4 = surface.calcPoint(u, v + step);
+
+                Vec3f normalv = Util::computeNormal(p3, p2, p1);
+
+                pct->position(bezierMat, p4.x, p4.y, p4.z)->color(0.5, 0.5, 0.5, 1)->uv(u, v + step)->normal(bezierMat, normalv)->endVertex();
+                pct->position(bezierMat, p3.x, p3.y, p3.z)->color(0.5, 0.5, 0.5, 1)->uv(u + step, v + step)->normal(bezierMat, normalv)->endVertex();
+                pct->position(bezierMat, p2.x, p2.y, p2.z)->color(0.5, 0.5, 0.5, 1)->uv(u + step, v)->normal(bezierMat, normalv)->endVertex();
+                pct->position(bezierMat, p1.x, p1.y, p1.z)->color(0.5, 0.5, 0.5, 1)->uv(u, v)->normal(bezierMat, normalv)->endVertex();
+
+
+            }
+        }
+
+
         pct->draw(0);
         pctn->stop();
 
@@ -502,6 +553,9 @@ int main(void) {
         pct->position(mat, 100, -10, -100)->color(1, 1, 1, 1)->uv(1, 0)->normal(mat, 0, 1, 0)->endVertex();
         pct->position(mat, 100, -10, 100)->color(1, 1, 1, 1)->uv(1, 1)->normal(mat, 0, 1, 0)->endVertex();
         pct->position(mat, -100, -10, 100)->color(1, 1, 1, 1)->uv(0, 1)->normal(mat, 0, 1, 0)->endVertex();
+
+        
+
 
         pct->draw(0);
 
@@ -539,9 +593,12 @@ int main(void) {
             lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 0,1)->endVertex();
         }
 
-       
 
-        mat.translate(20, 20, 20);
+
+        begin = *pb1;
+        end = *pb2;
+        dirb = *pb3;
+        dire = *pb4;
         lineBetween(mat, lineb, begin, dirb, 1, 1, 1, 1);
         lineBetween(mat, lineb, dirb, dire, 1, 1, 1, 1);
         lineBetween(mat, lineb, dire, end, 1, 1, 1, 1);
@@ -552,13 +609,34 @@ int main(void) {
             lineb->position(mat, v.x, v.y, v.z)->color(1, 1, 0,1)->endVertex();
             lineb->position(mat, v1.x, v1.y, v1.z)->color(1, 1, 0,1)->endVertex();
         }
-        mat.translate(-20, -20, -20);
+
+        Matrix4f rocketMat = Matrix4f();
+        
+        float flight = 0.001;
+        rocketFlightProgress += flight;
+        if (rocketFlightProgress >= 1) {
+            rocketFlightProgress = 0;
+        }
+
+        Vec3f flightPoint1 = bezierSpline(rocketFlightProgress, begin, dirb, dire, end);
+        Vec3f dir = bezierDirection(rocketFlightProgress, begin, dirb, dire, end);
+        rocketMat.translate(flightPoint1.x, flightPoint1.y, flightPoint1.z);
+        RenderUtil::applyMovementMatrixRotations(rocketMat, dir);
+
+        SHADERS.POSITION_COLOR_TEX_NORMAL->process();
+        SHADERS.POSITION_COLOR_TEX_NORMAL->mat4uniform("projection", PROJECTION);
+        SHADERS.POSITION_COLOR_TEX_NORMAL->mat4uniform("modelview", MODELVIEW);
+        SHADERS.POSITION_COLOR_TEX_NORMAL->textureUniform("sampler0",rocketTex);
+        rocket->render(rocketMat,pct,pctr,1,1,1,1,1);
+        SHADERS.POSITION_COLOR_TEX_NORMAL->stop();
 
 
+        
 
         SHADERS.POSITION_COLOR->process();
         SHADERS.POSITION_COLOR->mat4uniform("projection", PROJECTION);
         SHADERS.POSITION_COLOR->mat4uniform("modelview", MODELVIEW);
+        
         
         lineb->draw(0);
 
@@ -566,14 +644,24 @@ int main(void) {
         
         SHADERS.POSITION_COLOR->stop();
 
-        points.renderAllPoints(camera, PROJECTION, MODELVIEW);
-
+        points->tick(camera, mouse);
+        points->renderAllPoints(camera, PROJECTION, MODELVIEW,0);
+        
 
 
         glfwSwapBuffers(window);
+
+        
         mouse.tick();
 
+        if (glfwGetInputMode(WINDOW, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+            camera.yaw += -(mouse.getMouseDX()) * 0.1;
+            camera.setPitch(camera.getPitch() + (mouse.getMouseDY()) * 0.1);
+        }
+
         glfwPollEvents();
+        
+
         frame++;
     }
 
