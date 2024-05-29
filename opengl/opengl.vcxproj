@@ -149,6 +149,7 @@
     <ClCompile Include="src\math\Vec4f.cpp" />
     <ClCompile Include="src\Matrix4fStack.cpp" />
     <ClCompile Include="src\misc\BezierSurface.cpp" />
+    <ClCompile Include="src\misc\Path.cpp" />
     <ClCompile Include="src\RenderUtil.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
@@ -195,6 +196,13 @@
     <Text Include="resources\models\rocket.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="resources\models\level_model.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </Text>
   </ItemGroup>
