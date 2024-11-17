@@ -22,11 +22,13 @@
 #include "system/MouseMoveablePoints.cpp";
 #include "misc/BezierSurface.cpp";
 #include "misc/Path.cpp";
+#include "splines/BSpline.h"
+#include "splines/BezierSpline.h"
 
 static float Z_NEAR = 0.1;
 static float Z_FAR = -100;
-static int WINDOW_WIDTH = 640;
-static int WINDOW_HEIGHT = 480;
+static int WINDOW_WIDTH = 1920;
+static int WINDOW_HEIGHT = 1080;
 static Matrix4f PROJECTION = Matrix4f::perspective(60, WINDOW_WIDTH / (float)WINDOW_HEIGHT, Z_NEAR, Z_FAR);
 static Matrix4f MODELVIEW;
 static Camera camera;
@@ -140,26 +142,7 @@ void drawOrthos(Matrix4f& mat, VertexBuffer* b) {
 
 }
 
-float ermit(float p, float p1, float p2, float dir1, float dir2) {
-    return p1 * (2 * p * p * p - 3 * p * p + 1) + p2 * (-2 * p * p * p + 3 * p * p)
-        + dir1 * (p * p * p - 2 * p * p + p) + dir2 * (p * p * p - p * p);
-}
 
-Vec3f ermitSpline(float p,Vec3f p1, Vec3f p2,Vec3f dir1,Vec3f dir2) {
-    Vec3f v = Vec3f(
-        ermit(p,p1.x,p2.x,dir1.x,dir2.x),
-        ermit(p,p1.y,p2.y,dir1.y,dir2.y),
-        ermit(p,p1.z,p2.z,dir1.z,dir2.z)
-    );
-    return v;
-}
-
-float bezier(float p, float p1, float p2, float p3, float p4) {
-    return (1 - p) * (1 - p) * (1 - p) * p1 +
-        3 * p * (1 - p) * (1 - p) * p2 +
-        3 * p * p * (1 - p) * p3 +
-        p * p * p * p4;
-}
 
 float bezierDerivative(float p, float p1,float p2,float p3,float p4) {
     return -3 * (p - 1) * (p - 1) * p1 +
@@ -168,14 +151,7 @@ float bezierDerivative(float p, float p1,float p2,float p3,float p4) {
         3 * p * p * p4;
 }
 
-Vec3f bezierSpline(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
-    Vec3f v = Vec3f(
-        bezier(p,p1.x,p2.x,p3.x,p4.x),
-        bezier(p,p1.y,p2.y,p3.y,p4.y),
-        bezier(p,p1.z,p2.z,p3.z,p4.z)
-    );
-    return v;
-}
+
 Vec3f bezierDirection(float p, Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4) {
     Vec3f v = Vec3f(
         bezierDerivative(p,p1.x,p2.x,p3.x,p4.x),
@@ -192,9 +168,7 @@ void lineBetween(Matrix4f& mat,VertexBuffer* line,Vec3f p1,Vec3f p2,float r,floa
 
 int main(void) {
 
-    
-    ObjModel* level = ObjModel::loadModel("level_model");
-    ObjModel* rocket = ObjModel::loadModel("rocket");
+
 
     GLFWwindow* window;
 
@@ -256,11 +230,6 @@ int main(void) {
     VertexBuffer* pct = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL,1024,GL_QUADS);
     VertexBuffer* pctr = new VertexBuffer(VERTEX_FORMATS.POSITION_COLOR_TEX_NORMAL,1024,GL_TRIANGLES);
 
-    Texture texture = Texture("bait");
-    Texture bricks = Texture("bricks");
-    Texture welt = Texture("welt");
-    Texture rocketTex = Texture("cringe");
-    Framebuffer framebuffer = Framebuffer("shadow",0,0,0,1,1920,1080,0);
     
 
     Matrix4f lineMat = Matrix4f();
@@ -268,28 +237,19 @@ int main(void) {
     float frames = 0;
     Matrix4f mat = Matrix4f();
 
-    Path* path = new Path();
+    BezierSpline spline = BezierSpline();
 
-    float r = 3;
+    auto pss = Util::readPointsFromFile("C:/Users/User/Desktop/MISC/test/asd.dat",200);
 
-    Vec3f p1 = Vec3f(r,2.5,r);
-    Vec3f p12 = Vec3f(r - 2,1.5,r);
-    Vec3f p2 = Vec3f(-r,1,r);
-    Vec3f p23 = Vec3f(-r,0,r - 3);
-    Vec3f p3 = Vec3f(-r,0,-r);
-    Vec3f p34 = Vec3f(-r + 2,0,-r);
-    Vec3f p4 = Vec3f(r,1,-r);
-    path->
-        addPoint(p1)->
-        addPoint(p12)->
+    for (int i = 0; i < pss.size();i++) {
 
-        addPoint(p2)->
-        addPoint(p23)->
 
-        addPoint(p3)->
-        addPoint(p34)->
+        points->addPoint(&(pss.at(i)));
+        spline.addPoint(&(pss.at(i)));
 
-        addPoint(p4);
+    }
+
+
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -299,30 +259,20 @@ int main(void) {
         drawOrthos(lineMat,lineb);
 
 
+        SHADERS.POSITION_COLOR->process();
+        SHADERS.POSITION_COLOR->mat4uniform("projection", PROJECTION);
+        SHADERS.POSITION_COLOR->mat4uniform("modelview", MODELVIEW);
 
 
-        //
-        SHADERS.POSITION_COLOR_TEX_NORMAL->process();
-        SHADERS.POSITION_COLOR_TEX_NORMAL->mat4uniform("modelview", MODELVIEW);
-        SHADERS.POSITION_COLOR_TEX_NORMAL->mat4uniform("projection", PROJECTION);
-        SHADERS.POSITION_COLOR_TEX_NORMAL->textureUniform("sampler0", bricks);
-        level->render(mat,pct,pctr,1,1,1,1,1);
-
-        Matrix4f tr = Matrix4f();
-        Vec3f direction = Vec3f();
-        Vec3f currentPoint = path->getPoint((float)frames / 1000.0,&direction);
-        tr.translate(currentPoint.x,currentPoint.y,currentPoint.z);
 
 
-        SHADERS.POSITION_COLOR_TEX_NORMAL->textureUniform("sampler0", rocketTex);
-        RenderUtil::applyMovementMatrixRotations(tr, direction);
-        rocket->render(tr, pct, pctr, 1, 1, 1, 1,1);
-        
-        SHADERS.POSITION_COLOR_TEX_NORMAL->stop();
+        spline.draw(mat, lineb, 1, 1, 0, 1);
 
-        
+        lineb->draw(0);
 
-        //
+        SHADERS.POSITION_COLOR->stop();
+
+
 
         points->tick(camera, mouse);
         points->renderAllPoints(camera, PROJECTION, MODELVIEW,0);

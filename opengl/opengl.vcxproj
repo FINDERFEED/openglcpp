@@ -104,12 +104,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Documents\Libraries\glfw-3.3.9.bin.WIN64\include;C:\Users\User\Documents\Libraries\glew-2.1.0\include\GL;C:\Users\User\Documents\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\Documents\cpplibs\stb;C:\Users\User\Documents\cpplibs\glew-2.1.0\include\GL;C:\Users\User\Documents\cpplibs\glfw-3.4\include;C:\Users\User\Documents\Libraries\glfw-3.3.9.bin.WIN64\include;C:\Users\User\Documents\Libraries\glew-2.1.0\include\GL;C:\Users\User\Documents\Libraries\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\User\Documents\Libraries\glew-2.1.0\lib\Release\x64;C:\Users\User\Documents\Libraries\glfw-3.3.9.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\User\Documents\cpplibs\glew-2.1.0\lib\Release\x64;C:\Users\User\Documents\cpplibs\glfw-3.4\lib-vc2022;C:\Users\User\Documents\Libraries\glew-2.1.0\lib\Release\x64;C:\Users\User\Documents\Libraries\glfw-3.3.9.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -153,6 +153,9 @@
     <ClCompile Include="src\RenderUtil.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
+    <ClCompile Include="src\splines\BezierSpline.cpp" />
+    <ClCompile Include="src\splines\BSpline.cpp" />
+    <ClCompile Include="src\splines\Spline.cpp" />
     <ClCompile Include="src\stb\stb_image.cpp" />
     <ClCompile Include="src\system\Camera.cpp" />
     <ClCompile Include="src\system\Framebuffer.cpp" />
@@ -184,6 +187,9 @@
   <ItemGroup>
     <ClInclude Include="resources\shaders\position_color_tex.f" />
     <ClInclude Include="resources\shaders\shadow.f" />
+    <ClInclude Include="src\splines\BezierSpline.h" />
+    <ClInclude Include="src\splines\BSpline.h" />
+    <ClInclude Include="src\splines\Spline.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\models\testsphere.obj">

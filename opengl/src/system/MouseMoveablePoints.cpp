@@ -49,7 +49,7 @@ public:
 			float pixels[4];
 			glReadPixels(mx, my, 1, 1, GL_RGBA, GL_FLOAT, pixels);
 			pickingFramebuffer->unbind();
-			selectedPoint = (int)pixels[0];
+			selectedPoint = (int) round(pixels[0]);
 		} else {
 			selectedPoint = -1;
 		}

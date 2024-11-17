@@ -88,6 +88,14 @@ public:
 		return nv;
 	}
 
+	void operator +=(Vec3f& other) {
+
+		this->x += other.x;
+		this->y += other.y;
+		this->z += other.z;
+
+	}
+
 	void reverse() {
 		x = -x;
 		y = -y;

@@ -99,6 +99,15 @@
     <ClCompile Include="src\misc\Path.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\splines\Spline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\splines\BSpline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\splines\BezierSpline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\position_color.v" />
@@ -134,6 +143,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resources\shaders\shadow.f">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\splines\Spline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\splines\BSpline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\splines\BezierSpline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
